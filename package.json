@@ -24,5 +24,8 @@
     "rdme": "^8.4.0",
     "ts-node": "^10.9.1",
     "yaml": "^2.2.1"
+  },
+  "dependencies": {
+    "@octokit/rest": "^21.1.0"
   }
 }
