@@ -27,3 +27,12 @@
 
 ### Removed
 - Removed checking if the changelog file exists from `scripts/generate-changelog.js` script. Now, it fetches the latest file details directly.
+
+### Changes from PR #5 (remove networks from nft)
+
+### Changelog
+
+- Updated `nft/nfts.yaml`: 
+  - Removed several servers: `starknet-mainnet`, `starknet-sepolia`, `rootstock-mainnet`, `rootstock-testnet`, `linea-mainnet`, `linea-sepolia`.
+  - Fixed misspelling of attribute `default`, was mistakenly listed as `efault`.
+  - Number of lines were decreased with 1 addition and 7 deletions in the file.
