@@ -5,7 +5,7 @@ const githubToken = process.env.GH_ACCESS_TOKEN;
 const openaiApiKey = process.env.OPENAI_API_KEY;
 const prNumber = process.env.PR_NUMBER;
 const owner = "thebrianchen";
-const repo = "docs-openapi-spec";
+const repo = "docs-openapi-specs";
 
 (async () => {
   const { Octokit } = await import("@octokit/rest");
