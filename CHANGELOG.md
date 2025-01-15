@@ -1,0 +1,5 @@
+- Added a new Github Workflow "generate-changelog" to automate changelog generation for PRs. This workflow triggers on PRs, ignores branches with "changelog/update-*", and runs on Ubuntu
+- Removed the ".github" directory from the .gitignore file
+- Updated package-lock.json with new dependencies
+- Added '@octokit/rest' dependency to package.json
+- Created a new JS script 'generate-changelog.js'. This script fetches PR details, generates a changelog entry using OpenAI's API, and either appends this to an existing changelog PR or creates a new one.
