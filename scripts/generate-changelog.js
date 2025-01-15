@@ -57,21 +57,8 @@ const repo = "docs-openapi-specs";
   }
 
   async function findOrCreateChangelogPR(changelogEntry) {
-    const { data: pullRequests } = await octokit.rest.pulls.list({
-      owner,
-      repo,
-      state: "open",
-    });
-  
-    const changelogPR = pullRequests.find((pr) =>
-      pr.title.startsWith("Changelog Update") ||
-      pr.labels.some((label) => label.name === "changelog-update")
-    );
-  
     const formattedEntry = `### Changes from PR #${prNumber} (${prTitle})\n\n${changelogEntry}\n`;
     const changelogPath = "CHANGELOG.md";
-  
-    // Fetch the latest file details
     let changelogContent = "";
     let latestSha = null;
   
@@ -93,47 +80,69 @@ const repo = "docs-openapi-specs";
       }
     }
   
-    // Update or add a changelog section for the current PR
     if (!changelogContent.includes(formattedEntry)) {
       changelogContent += `\n${formattedEntry}`;
     }
   
-    if (changelogPR) {
-      // Update the existing changelog PR
-      console.log("Changelog PR found, updating changes...");
-      await octokit.rest.repos.createOrUpdateFileContents({
+    // Create or update the changelog branch
+    const branchName = `changelog/update-${Date.now()}`;
+    const baseBranch = (await octokit.rest.repos.get({ owner, repo })).data.default_branch;
+  
+    try {
+      // Check if branch already exists
+      await octokit.rest.git.getRef({
         owner,
         repo,
-        path: changelogPath,
-        message: "Update changelog",
-        content: Buffer.from(changelogContent).toString("base64"),
-        sha: latestSha, // Use the latest SHA
-      });
-    } else {
-      // Create a new changelog PR
-      console.log("No existing changelog PR found, creating a new one...");
-      const branchName = `changelog/update-${Date.now()}`;
-      const baseBranch = (await octokit.rest.repos.get({ owner, repo })).data.default_branch;
-  
-      // Create a new branch
-      await octokit.rest.git.createRef({
-        owner,
-        repo,
-        ref: `refs/heads/${branchName}`,
-        sha: (await octokit.rest.git.getRef({ owner, repo, ref: `heads/${baseBranch}` })).data.object.sha,
+        ref: `heads/${branchName}`,
       });
   
-      // Update the file on the new branch
-      await octokit.rest.repos.createOrUpdateFileContents({
-        owner,
-        repo,
-        path: changelogPath,
-        message: "Add changelog entry",
-        content: Buffer.from(changelogContent).toString("base64"),
-        branch: branchName,
-      });
+      console.log(`Branch ${branchName} already exists. Force-pushing changes...`);
+    } catch (error) {
+      if (error.status === 404) {
+        console.log("Branch does not exist. Creating a new branch...");
+        await octokit.rest.git.createRef({
+          owner,
+          repo,
+          ref: `refs/heads/${branchName}`,
+          sha: (
+            await octokit.rest.git.getRef({
+              owner,
+              repo,
+              ref: `heads/${baseBranch}`,
+            })
+          ).data.object.sha,
+        });
+      } else {
+        throw error;
+      }
+    }
   
+    // Force push the updated changelog content
+    await octokit.rest.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path: changelogPath,
+      message: "Update changelog",
+      content: Buffer.from(changelogContent).toString("base64"),
+      branch: branchName,
+      sha: latestSha, // Use the latest SHA or null for new files
+    });
+  
+    // Check for an existing pull request
+    const { data: pullRequests } = await octokit.rest.pulls.list({
+      owner,
+      repo,
+      state: "open",
+    });
+  
+    const changelogPR = pullRequests.find((pr) =>
+      pr.title.startsWith("Changelog Update") ||
+      pr.labels.some((label) => label.name === "changelog-update")
+    );
+  
+    if (!changelogPR) {
       // Create a pull request
+      console.log("No existing changelog PR found. Creating a new one...");
       await octokit.rest.pulls.create({
         owner,
         repo,
@@ -143,6 +152,8 @@ const repo = "docs-openapi-specs";
         body: "Automated changelog update.",
         labels: ["changelog-update"],
       });
+    } else {
+      console.log(`Changelog PR already exists: #${changelogPR.number}.`);
     }
   }
 
