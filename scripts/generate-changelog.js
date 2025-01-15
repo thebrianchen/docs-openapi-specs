@@ -1,7 +1,7 @@
 const axios = require("axios");
 const fs = require("fs");
 
-const githubToken = process.env.GITHUB_TOKEN;
+const githubToken = process.env.GH_ACCESS_TOKEN;
 const openaiApiKey = process.env.OPENAI_API_KEY;
 const prNumber = process.env.GITHUB_REF_NAME.split("/")[2];
 const owner = "thebrianchen";
@@ -12,6 +12,8 @@ const repo = "docs-openapi-spec";
   const octokit = new Octokit({ auth: githubToken });
 
   async function fetchPRDetails() {
+    console.log("STARTING FETCH")
+    console.log("pr number", prNumber)
     // Fetch PR files
     const { data: files } = await octokit.rest.pulls.listFiles({
       owner,
