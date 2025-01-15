@@ -3,7 +3,7 @@ const fs = require("fs");
 
 const githubToken = process.env.GH_ACCESS_TOKEN;
 const openaiApiKey = process.env.OPENAI_API_KEY;
-const prNumber = process.env.GITHUB_REF_NAME.split("/")[2];
+const prNumber = process.env.PR_NUMBER;
 const owner = "thebrianchen";
 const repo = "docs-openapi-spec";
 
