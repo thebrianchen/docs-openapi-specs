@@ -71,17 +71,39 @@ const repo = "docs-openapi-specs";
 
     const formattedEntry = `### Changes from PR #${prNumber} (${prTitle})\n\n${changelogEntry}\n`;
 
+    let changelogContent = "";
+    const changelogPath = "CHANGELOG.md";
+
+    // Check if the changelog file exists, and create it if not
+    if (fs.existsSync(changelogPath)) {
+      changelogContent = fs.readFileSync(changelogPath, "utf-8");
+    } else {
+      console.log("CHANGELOG.md does not exist. Creating a new file.");
+      fs.writeFileSync(changelogPath, "## Changelog\n\n");
+      changelogContent = fs.readFileSync(changelogPath, "utf-8");
+    }
+
+    // Update or add a changelog section for the current PR
+    const updatedChangelogContent = changelogContent.replace(
+      new RegExp(`### Changes from PR #${prNumber} \\(.*?\\)\\n\\n.*?(?=\\n### Changes from PR|$)`, "s"),
+      formattedEntry
+    );
+
+    if (updatedChangelogContent === changelogContent) {
+      // If no match was found, append the new entry
+      changelogContent += `\n${formattedEntry}`;
+    }
+
     if (changelogPR) {
-      // Append to existing PR
-      console.log("Changelog PR found, appending changes...");
-      const changelogContent = fs.readFileSync("CHANGELOG.md", "utf-8");
-      fs.writeFileSync("CHANGELOG.md", `${changelogContent}\n${formattedEntry}`);
+      // Update the existing changelog PR
+      console.log("Changelog PR found, updating changes...");
+      fs.writeFileSync(changelogPath, changelogContent);
       await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
-        path: "CHANGELOG.md",
+        path: changelogPath,
         message: "Update changelog",
-        content: Buffer.from(changelogContent + `\n${formattedEntry}`).toString("base64"),
+        content: Buffer.from(changelogContent).toString("base64"),
         sha: changelogPR.head.sha,
       });
     } else {
@@ -97,13 +119,13 @@ const repo = "docs-openapi-specs";
         sha: (await octokit.rest.git.getRef({ owner, repo, ref: `heads/${baseBranch}` })).data.object.sha,
       });
 
-      fs.writeFileSync("CHANGELOG.md", formattedEntry);
+      fs.writeFileSync(changelogPath, changelogContent);
       await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
-        path: "CHANGELOG.md",
+        path: changelogPath,
         message: "Add changelog entry",
-        content: Buffer.from(formattedEntry).toString("base64"),
+        content: Buffer.from(changelogContent).toString("base64"),
         branch: branchName,
       });
 
