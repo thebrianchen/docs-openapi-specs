@@ -27,3 +27,11 @@
 
 ### Removed
 - Removed checking if the changelog file exists from `scripts/generate-changelog.js` script. Now, it fetches the latest file details directly.
+
+### Changes from PR #5 (remove networks from nft)
+
+### Changed
+- In `nft/nfts.yaml`, removed references to starknet-mainnet, starknet-sepolia, rootstock-mainnet, rootstock-testnet, linea-mainnet, and linea-sepolia.
+
+### Added
+- In `nft/nfts.yaml`, added references to error response for rate limit exceeded (error code '429') in the getNFTMetadata-v3 operation section.
