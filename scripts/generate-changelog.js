@@ -1,6 +1,3 @@
-const { createRequire } = require("module");
-const require = createRequire(import.meta.url);
-
 const axios = require("axios");
 const fs = require("fs");
 
