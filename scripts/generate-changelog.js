@@ -1,4 +1,4 @@
-// const { Octokit } = require("@octokit/rest");
+const { Octokit } = require("@octokit/rest");
 const axios = require("axios");
 const fs = require("fs");
 
