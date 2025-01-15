@@ -27,3 +27,10 @@
 
 ### Removed
 - Removed checking if the changelog file exists from `scripts/generate-changelog.js` script. Now, it fetches the latest file details directly.
+
+### Changes from PR #4 (Add internal server error test)
+
+### Updated
+
+- `prices/prices.yaml`: Added a 500 Internal Server Error response schema reference to the paths.
+- `scripts/generate-changelog.js`: Improved script logic for handling changelog updates. It now includes handling for cases where a changelog file does not exist, cleans up code redundancies, and adds better error and existence checking for existing changelog branches and PRs.
