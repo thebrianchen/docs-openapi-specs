@@ -13,3 +13,17 @@
 
 ### Updated
 - Changes in `package-lock.json` seem to reflect the removal of some unnecessary packages and additions from new dependencies.
+
+### Changes from PR #4 (Add internal server error test)
+
+### Added
+- `prices/prices.yaml` now includes a "500: Internal Server Error" message along with its schema.
+
+### Changed
+- Updated the `scripts/generate-changelog.js` to:
+  - Fetch the latest file details instead of checking if the changelog file exists.
+  - Use the latest SHA when updating the existing changelog PR.
+  - Create a new branch when there is no existing changelog PR.
+
+### Removed
+- Removed checking if the changelog file exists from `scripts/generate-changelog.js` script. Now, it fetches the latest file details directly.
