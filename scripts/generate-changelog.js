@@ -69,17 +69,19 @@ const repo = "docs-openapi-specs";
       pr.labels.some((label) => label.name === "changelog-update")
     );
 
+    const formattedEntry = `### Changes from PR #${prNumber} (${prTitle})\n\n${changelogEntry}\n`;
+
     if (changelogPR) {
       // Append to existing PR
       console.log("Changelog PR found, appending changes...");
       const changelogContent = fs.readFileSync("CHANGELOG.md", "utf-8");
-      fs.writeFileSync("CHANGELOG.md", `${changelogContent}\n${changelogEntry}`);
+      fs.writeFileSync("CHANGELOG.md", `${changelogContent}\n${formattedEntry}`);
       await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
         path: "CHANGELOG.md",
         message: "Update changelog",
-        content: Buffer.from(changelogContent).toString("base64"),
+        content: Buffer.from(changelogContent + `\n${formattedEntry}`).toString("base64"),
         sha: changelogPR.head.sha,
       });
     } else {
@@ -95,13 +97,13 @@ const repo = "docs-openapi-specs";
         sha: (await octokit.rest.git.getRef({ owner, repo, ref: `heads/${baseBranch}` })).data.object.sha,
       });
 
-      fs.writeFileSync("CHANGELOG.md", changelogEntry);
+      fs.writeFileSync("CHANGELOG.md", formattedEntry);
       await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
         path: "CHANGELOG.md",
         message: "Add changelog entry",
-        content: Buffer.from(changelogEntry).toString("base64"),
+        content: Buffer.from(formattedEntry).toString("base64"),
         branch: branchName,
       });
 
