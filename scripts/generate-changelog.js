@@ -84,51 +84,6 @@ const repo = "docs-openapi-specs";
       changelogContent += `\n${formattedEntry}`;
     }
   
-    // Create or update the changelog branch
-    const branchName = `changelog/update-${Date.now()}`;
-    const baseBranch = (await octokit.rest.repos.get({ owner, repo })).data.default_branch;
-  
-    try {
-      // Check if branch already exists
-      await octokit.rest.git.getRef({
-        owner,
-        repo,
-        ref: `heads/${branchName}`,
-      });
-  
-      console.log(`Branch ${branchName} already exists. Force-pushing changes...`);
-    } catch (error) {
-      if (error.status === 404) {
-        console.log("Branch does not exist. Creating a new branch...");
-        await octokit.rest.git.createRef({
-          owner,
-          repo,
-          ref: `refs/heads/${branchName}`,
-          sha: (
-            await octokit.rest.git.getRef({
-              owner,
-              repo,
-              ref: `heads/${baseBranch}`,
-            })
-          ).data.object.sha,
-        });
-      } else {
-        throw error;
-      }
-    }
-  
-    // Force push the updated changelog content
-    await octokit.rest.repos.createOrUpdateFileContents({
-      owner,
-      repo,
-      path: changelogPath,
-      message: "Update changelog",
-      content: Buffer.from(changelogContent).toString("base64"),
-      branch: branchName,
-      sha: latestSha, // Use the latest SHA or null for new files
-    });
-  
-    // Check for an existing pull request
     const { data: pullRequests } = await octokit.rest.pulls.list({
       owner,
       repo,
@@ -140,9 +95,50 @@ const repo = "docs-openapi-specs";
       pr.labels.some((label) => label.name === "changelog-update")
     );
   
-    if (!changelogPR) {
-      // Create a pull request
+    if (changelogPR) {
+      console.log(`Changelog PR already exists: #${changelogPR.number}. Updating...`);
+      const branchName = changelogPR.head.ref;
+  
+      // Update the branch with the latest changelog content
+      await octokit.rest.repos.createOrUpdateFileContents({
+        owner,
+        repo,
+        path: changelogPath,
+        message: "Update changelog",
+        content: Buffer.from(changelogContent).toString("base64"),
+        branch: branchName,
+        sha: latestSha,
+      });
+    } else {
       console.log("No existing changelog PR found. Creating a new one...");
+      const branchName = `changelog/update-${Date.now()}`;
+      const baseBranch = (await octokit.rest.repos.get({ owner, repo })).data.default_branch;
+  
+      // Create a new branch
+      await octokit.rest.git.createRef({
+        owner,
+        repo,
+        ref: `refs/heads/${branchName}`,
+        sha: (
+          await octokit.rest.git.getRef({
+            owner,
+            repo,
+            ref: `heads/${baseBranch}`,
+          })
+        ).data.object.sha,
+      });
+  
+      // Update the file on the new branch
+      await octokit.rest.repos.createOrUpdateFileContents({
+        owner,
+        repo,
+        path: changelogPath,
+        message: "Add changelog entry",
+        content: Buffer.from(changelogContent).toString("base64"),
+        branch: branchName,
+      });
+  
+      // Create a pull request
       await octokit.rest.pulls.create({
         owner,
         repo,
@@ -152,8 +148,6 @@ const repo = "docs-openapi-specs";
         body: "Automated changelog update.",
         labels: ["changelog-update"],
       });
-    } else {
-      console.log(`Changelog PR already exists: #${changelogPR.number}.`);
     }
   }
 
