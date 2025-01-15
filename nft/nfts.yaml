@@ -31,7 +31,7 @@ servers: # servers are also specified at the method level, if there isn't a spec
           - shape-mainnet
           - shape-sepolia
           - lens-sepolia
-        efault: eth-mainnet
+        default: eth-mainnet
 x-sandbox:
   category:
     type:
@@ -222,6 +222,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ownedNFTv3'
+        '429':
+          description: 'Rate Limit Exceeded'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'        
       operationId: getNFTMetadata-v3
   '/v3/{apiKey}/getNFTMetadataBatch':
     post:
